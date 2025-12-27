@@ -5,7 +5,6 @@ from ML_WHO_statistics import show_statistics
 from ML_WHO_visualisations import show_visualisations
 from ML_WHO_feature_engineering import run_core_feature_engineering
 from ML_WHO_evaluation import evaluate_models
-from ML_WHO_xai import show_xai   # OPTIONAL XAI
 
 # ==================================================
 # PAGE CONFIG
@@ -36,9 +35,14 @@ body {
     background-color: #0066cc;
     color: white;
     border-radius: 8px;
+    padding: 0.5em 1em;
 }
 .stButton > button:hover {
     background-color: #004c99;
+}
+.uploaded-file {
+    font-weight: bold;
+    color: green;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -50,10 +54,10 @@ if "section" not in st.session_state:
     st.session_state.section = "Home"
 
 # ==================================================
-# TITLE
+# APP TITLE
 # ==================================================
 st.markdown(
-    "<h1 style='text-align:center; color:#0c4a6e;'>🤖 ML WHO? – Intelligent Dataset Explorer</h1>",
+    "<h1 style='text-align:center; color:#0c4a6e;'>🤖 ML WHO? – Regression Model Evaluation App</h1>",
     unsafe_allow_html=True
 )
 
@@ -70,8 +74,7 @@ st.session_state.section = st.sidebar.radio(
         "Statistics",
         "Visualisations",
         "Core Feature Engineering",
-        "Model Evaluation",
-        "Explainability (Optional)"
+        "Model Evaluation"
     ]
 )
 
@@ -82,15 +85,17 @@ if st.session_state.section == "Home":
     st.markdown("""
     <h3 class="section-title">📊 Welcome to ML WHO?</h3>
     <p>
-    This app helps you explore data, engineer features,
-    evaluate ML models, and optionally explain them.
+        This app focuses on <b>regression-based machine learning model evaluation</b>.
+        You can upload your dataset, engineer features, and compare multiple regression models.
     </p>
     <ul>
-        <li>📈 Statistics & EDA</li>
-        <li>🧩 Feature engineering (cloud-safe)</li>
-        <li>🧪 Model evaluation</li>
-        <li>🧠 Explainability (advanced)</li>
+        <li>📁 Upload CSV / Excel / JSON data</li>
+        <li>📊 Explore basic statistics</li>
+        <li>📈 Visualize data distributions</li>
+        <li>🧩 Perform regression-safe feature engineering</li>
+        <li>📉 Evaluate and compare regression models</li>
     </ul>
+    <p>👈 Start by uploading a dataset.</p>
     """, unsafe_allow_html=True)
 
 # ==================================================
@@ -100,7 +105,7 @@ elif st.session_state.section == "Upload Data":
     st.markdown("<h3 class='section-title'>📁 Upload Dataset</h3>", unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader(
-        "Upload CSV, Excel, or JSON",
+        "Upload a CSV, Excel, or JSON file",
         type=["csv", "xlsx", "xls", "json"]
     )
 
@@ -114,37 +119,38 @@ elif st.session_state.section == "Upload Data":
                 df = pd.read_json(uploaded_file)
 
             st.session_state.df = df.copy()
-            st.success("Dataset uploaded successfully")
+
+            st.success("✅ Dataset uploaded successfully!")
+            st.markdown("<p class='uploaded-file'>Preview:</p>", unsafe_allow_html=True)
             st.dataframe(df.head())
 
         except Exception as e:
-            st.error(f"Failed to load file: {e}")
+            st.error(f"❌ Failed to load file: {e}")
 
 # ==================================================
-# REQUIRE DATA FOR BELOW
+# SECTIONS THAT REQUIRE DATA
 # ==================================================
 elif "df" in st.session_state:
     df = st.session_state.df
 
     # ---------------- STATISTICS ----------------
     if st.session_state.section == "Statistics":
-        st.markdown("<h3 class='section-title'>📊 Statistics</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='section-title'>📊 Dataset Statistics</h3>", unsafe_allow_html=True)
         show_statistics(df)
 
     # ---------------- VISUALISATIONS ----------------
     elif st.session_state.section == "Visualisations":
-        st.markdown("<h3 class='section-title'>📈 Visualisations</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='section-title'>📈 Data Visualisations</h3>", unsafe_allow_html=True)
         show_visualisations(df)
 
     # ---------------- CORE FEATURE ENGINEERING ----------------
     elif st.session_state.section == "Core Feature Engineering":
-        st.markdown("<h3 class='section-title'>🧩 Core Feature Engineering</h3>", unsafe_allow_html=True)
-
+        st.markdown("<h3 class='section-title'>🧩 Core Feature Engineering (Regression)</h3>", unsafe_allow_html=True)
         run_core_feature_engineering(df)
 
     # ---------------- MODEL EVALUATION ----------------
     elif st.session_state.section == "Model Evaluation":
-        st.markdown("<h3 class='section-title'>🧪 Model Evaluation</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='section-title'>📉 Regression Model Evaluation</h3>", unsafe_allow_html=True)
 
         if "X" in st.session_state and "y" in st.session_state:
             evaluate_models(
@@ -152,22 +158,10 @@ elif "df" in st.session_state:
                 st.session_state.y
             )
         else:
-            st.warning("Please run Core Feature Engineering first.")
-
-    # ---------------- OPTIONAL XAI ----------------
-    elif st.session_state.section == "Explainability (Optional)":
-        st.markdown("<h3 class='section-title'>🧠 Explainability</h3>", unsafe_allow_html=True)
-
-        if "X" in st.session_state and "y" in st.session_state:
-            show_xai(
-                st.session_state.X,
-                st.session_state.y
-            )
-        else:
-            st.warning("Run Core Feature Engineering before XAI.")
+            st.warning("⚠️ Please run Core Feature Engineering first.")
 
 # ==================================================
 # NO DATA FALLBACK
 # ==================================================
 else:
-    st.info("Please upload a dataset first.")
+    st.info("📁 Please upload a dataset first using **Upload Data**.")
